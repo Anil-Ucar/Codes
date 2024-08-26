@@ -27,3 +27,4 @@ if __name__ == "__main__":
     print(f'Unique Users: {unique_users}')
     print('Most Common Queries:')
     print(most_common_queries)
+    print

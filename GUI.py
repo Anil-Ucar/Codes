@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import sqlite3
+import threading
 
 # Verbindung zur SQLite-Datenbank herstellen
 def connect_db():
@@ -9,6 +10,10 @@ def connect_db():
 
 # Funktion zum Anzeigen der letzten 10 Suchabfragen
 def show_last_queries():
+    start_loading()  # Ladebalken starten
+    threading.Thread(target=fetch_last_queries).start()  # Datenabfrage in einem separaten Thread
+
+def fetch_last_queries():
     conn = connect_db()
     cursor = conn.cursor()
 
@@ -30,10 +35,14 @@ def show_last_queries():
         messagebox.showerror("Fehler", f"Ein unerwarteter Fehler ist aufgetreten: {e}")
     finally:
         conn.close()
-
+        stop_loading()  # Ladebalken stoppen
 
 # Funktion zum Analysieren der grundlegenden Statistiken
 def analyze_statistics():
+    start_loading()  # Ladebalken starten
+    threading.Thread(target=perform_analysis).start()  # Analyse in einem separaten Thread
+
+def perform_analysis():
     conn = connect_db()
     cursor = conn.cursor()
 
@@ -60,12 +69,16 @@ def analyze_statistics():
 
     except Exception as e:
         messagebox.showerror("Fehler", str(e))
-
     finally:
         conn.close()
+        stop_loading()  # Ladebalken stoppen
 
 # Funktion zum Anzeigen aller Daten der Datenbank (Vorsicht bei großen Datensätzen!)
 def show_all_data():
+    start_loading()  # Ladebalken starten
+    threading.Thread(target=fetch_all_data).start()  # Datenabfrage in einem separaten Thread
+
+def fetch_all_data():
     conn = connect_db()
     cursor = conn.cursor()
 
@@ -84,9 +97,18 @@ def show_all_data():
 
     except Exception as e:
         messagebox.showerror("Fehler", str(e))
-
     finally:
         conn.close()
+        stop_loading()  # Ladebalken stoppen
+
+# Funktionen zum Starten und Stoppen des Ladebalkens
+def start_loading():
+    progress_bar.start()
+    progress_bar.pack(pady=10)
+
+def stop_loading():
+    progress_bar.stop()
+    progress_bar.pack_forget()
 
 # Tkinter-Setup
 root = tk.Tk()
@@ -100,9 +122,6 @@ btn_last_queries.pack(pady=10)
 btn_analyze_stats = tk.Button(root, text="Statistiken analysieren", command=analyze_statistics)
 btn_analyze_stats.pack(pady=10)
 
-btn_show_all = tk.Button(root, text="Alle Daten anzeigen (limitiert)", command=show_all_data)
-btn_show_all.pack(pady=10)
-
 # Treeview für strukturierte Datenanzeige
 columns = ('AnonID', 'Query', 'QueryTime')  # Definiere die Spalten
 treeview = ttk.Treeview(root, columns=columns, show='headings')
@@ -114,6 +133,9 @@ treeview.pack(pady=10, fill=tk.BOTH, expand=True)
 # Textfeld für die Statistikausgabe
 result_text = tk.Text(root, height=10, width=100)
 result_text.pack(pady=10, fill=tk.BOTH, expand=True)
+
+# Ladebalken (Progressbar)
+progress_bar = ttk.Progressbar(root, orient="horizontal", length=400, mode="indeterminate")
 
 # Hauptschleife der GUI
 root.mainloop()

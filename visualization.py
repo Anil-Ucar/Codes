@@ -4,6 +4,7 @@ from pathlib import Path
 def plot_most_common_queries(data, save_path=None):
     # Leere Werte in 'Query' entfernen
     data = data.dropna(subset=['Query'])
+    data = data[data['Query'].str.strip() != "-"]
     # Top 10 häufigste Suchanfragen ermitteln
     most_common_queries = data['Query'].value_counts().head(10)
     

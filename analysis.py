@@ -8,6 +8,9 @@ def load_clean_data(file_path):
     return data
 
 def analyze_basic_statistics(data):
+    # Entfernen von ungültigen oder leeren Werten in 'Query'
+    data = data[data['Query'].str.strip() != "-"]
+    data = data.dropna(subset=['Query'])
     total_queries = len(data)
     unique_users = data['AnonID'].nunique()
     most_common_queries = data['Query'].value_counts().head(10)
@@ -27,4 +30,3 @@ if __name__ == "__main__":
     print(f'Unique Users: {unique_users}')
     print('Most Common Queries:')
     print(most_common_queries)
-najksdbakjsbdas

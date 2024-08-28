@@ -18,7 +18,8 @@ def fetch_last_queries():
     cursor = conn.cursor()
 
     try:
-        cursor.execute("SELECT AnonID, Query, QueryTime FROM search_queries ORDER BY QueryTime DESC LIMIT 10")
+        # Nur Suchanfragen abrufen, die kein "-" enthalten
+        cursor.execute("SELECT AnonID, Query, QueryTime FROM search_queries WHERE Query != '-' ORDER BY QueryTime DESC LIMIT 10")
         queries = cursor.fetchall()
 
         treeview.delete(*treeview.get_children())
@@ -47,16 +48,16 @@ def perform_analysis():
     cursor = conn.cursor()
 
     try:
-        # Gesamtanzahl der Suchanfragen
-        cursor.execute("SELECT COUNT(*) FROM search_queries")
+        # Gesamtanzahl der Suchanfragen ohne "-"
+        cursor.execute("SELECT COUNT(*) FROM search_queries WHERE Query != '-'")
         total_queries = cursor.fetchone()[0]
 
         # Anzahl der eindeutigen Nutzer
-        cursor.execute("SELECT COUNT(DISTINCT AnonID) FROM search_queries")
+        cursor.execute("SELECT COUNT(DISTINCT AnonID) FROM search_queries WHERE Query != '-'")
         unique_users = cursor.fetchone()[0]
 
-        # Die häufigsten Suchabfragen
-        cursor.execute("SELECT Query, COUNT(*) as count FROM search_queries GROUP BY Query ORDER BY count DESC LIMIT 10")
+        # Die häufigsten Suchabfragen ohne "-"
+        cursor.execute("SELECT Query, COUNT(*) as count FROM search_queries WHERE Query != '-' GROUP BY Query ORDER BY count DESC LIMIT 10")
         common_queries = cursor.fetchall()
 
         # Statistiken anzeigen
@@ -73,27 +74,35 @@ def perform_analysis():
         conn.close()
         stop_loading()  # Ladebalken stoppen
 
-# Funktion zum Anzeigen aller Daten der Datenbank (Vorsicht bei großen Datensätzen!)
-def show_all_data():
+# Funktion zum gezielten Suchen nach AnonID, Query oder QueryTime
+def search_data():
     start_loading()  # Ladebalken starten
-    threading.Thread(target=fetch_all_data).start()  # Datenabfrage in einem separaten Thread
+    threading.Thread(target=perform_search).start()  # Suche in einem separaten Thread
 
-def fetch_all_data():
+def perform_search():
+    search_term = search_entry.get()
+    search_by = search_option.get()
+    
+    if not search_term:
+        messagebox.showerror("Fehler", "Bitte einen Suchbegriff eingeben.")
+        stop_loading()
+        return
+    
     conn = connect_db()
     cursor = conn.cursor()
 
     try:
-        cursor.execute("SELECT * FROM search_queries LIMIT 100")  # Begrenze die Ausgabe auf 100 Datensätze
+        query = f"SELECT AnonID, Query, QueryTime FROM search_queries WHERE {search_by} LIKE ? AND Query != '-'"
+        cursor.execute(query, ('%' + search_term + '%',))
         queries = cursor.fetchall()
 
-        # Treeview leeren
         treeview.delete(*treeview.get_children())
 
         if queries:
             for query in queries:
-                treeview.insert('', 'end', values=query[1:])  # Werte korrekt einfügen, beginnend ab der zweiten Spalte
+                treeview.insert('', 'end', values=(query[0], query[1], query[2]))
         else:
-            messagebox.showinfo("Info", "Keine Daten gefunden.")
+            messagebox.showinfo("Info", "Keine Übereinstimmungen gefunden.")
 
     except Exception as e:
         messagebox.showerror("Fehler", str(e))
@@ -121,6 +130,23 @@ btn_last_queries.pack(pady=10)
 
 btn_analyze_stats = tk.Button(root, text="Statistiken analysieren", command=analyze_statistics)
 btn_analyze_stats.pack(pady=10)
+
+# Sucheingabe und Suchoptionen
+search_frame = tk.Frame(root)
+search_frame.pack(pady=10)
+
+search_label = tk.Label(search_frame, text="Suchen nach:")
+search_label.pack(side=tk.LEFT, padx=5)
+
+search_entry = tk.Entry(search_frame)
+search_entry.pack(side=tk.LEFT, padx=5)
+
+search_option = tk.StringVar(value="Query")
+search_option_menu = ttk.Combobox(search_frame, textvariable=search_option, values=["AnonID", "Query", "QueryTime"])
+search_option_menu.pack(side=tk.LEFT, padx=5)
+
+btn_search = tk.Button(search_frame, text="Suchen", command=search_data)
+btn_search.pack(side=tk.LEFT, padx=5)
 
 # Treeview für strukturierte Datenanzeige
 columns = ('AnonID', 'Query', 'QueryTime')  # Definiere die Spalten

@@ -16,21 +16,21 @@ def show_last_queries():
         cursor.execute("SELECT AnonID, Query, QueryTime FROM search_queries ORDER BY QueryTime DESC LIMIT 10")
         queries = cursor.fetchall()
 
-        # Treeview leeren
         treeview.delete(*treeview.get_children())
 
         if queries:
             for query in queries:
-                # AnonID, Query und QueryTime korrekt in die Spalten einfügen
                 treeview.insert('', 'end', values=(query[0], query[1], query[2]))
         else:
             messagebox.showinfo("Info", "Keine Suchanfragen gefunden.")
 
+    except sqlite3.DatabaseError as e:
+        messagebox.showerror("Fehler", f"Ein Datenbankfehler ist aufgetreten: {e}")
     except Exception as e:
-        messagebox.showerror("Fehler", str(e))
-
+        messagebox.showerror("Fehler", f"Ein unerwarteter Fehler ist aufgetreten: {e}")
     finally:
         conn.close()
+
 
 # Funktion zum Analysieren der grundlegenden Statistiken
 def analyze_statistics():

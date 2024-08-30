@@ -1,15 +1,15 @@
 import matplotlib.pyplot as plt
 from pathlib import Path
+import seaborn as sns
 
 def plot_most_common_queries(data, save_path=None):
     try:
         # Ungültige oder leere Werte in der 'Query'-Spalte entfernen
         data = data.dropna(subset=['Query'])
-        
-        # Entfernen von Einträgen, bei denen die 'Query'-Spalte ein "-" enthält
+
+        # Entferne alle Queries, die nur ein "-" enthalten
         data = data[data['Query'].str.strip() != "-"]
-        
-        # Die häufigsten Suchanfragen bestimmen
+
         most_common_queries = data['Query'].value_counts().head(10)
 
         # Überprüfen, ob es Daten zum Plotten gibt
@@ -17,12 +17,23 @@ def plot_most_common_queries(data, save_path=None):
             print("Keine Daten zum Plotten vorhanden.")
             return
         
+        # Farbenpalette von Seaborn verwenden
+        sns.set(style="whitegrid")
+        plt.figure(figsize=(12, 8))
+
         # Diagramm erstellen
-        plt.figure(figsize=(12, 6))
-        most_common_queries.plot(kind='bar')
-        plt.title('Top 10 Most Common Queries')
-        plt.xlabel('Queries')
-        plt.ylabel('Frequency')
+        ax = sns.barplot(x=most_common_queries.index, y=most_common_queries.values, palette="muted")
+
+        # Titel und Achsenbeschriftungen
+        plt.title('Top 10 Most Common Queries', fontsize=16)
+        plt.xlabel('Queries', fontsize=14)
+        plt.ylabel('Frequency', fontsize=14)
+        plt.xticks(rotation=45, ha='right', fontsize=12)  # X-Achsen-Beschriftung schräg stellen
+
+        # Die Werte über den Balken anzeigen
+        for index, value in enumerate(most_common_queries.values):
+            ax.text(index, value, f'{value}', ha='center', va='bottom', fontsize=12)
+
         plt.tight_layout()
 
         # Diagramm speichern oder anzeigen

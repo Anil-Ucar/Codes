@@ -1,7 +1,9 @@
 import os
 import pandas as pd
+import sqlite3
 from pathlib import Path
 
+# Funktion zum Laden der Daten aus einer Datei (alte Methode)
 def load_data(file_path):
     try:
         file_path = Path(file_path)
@@ -12,7 +14,6 @@ def load_data(file_path):
         return data
     except FileNotFoundError as e:
         print(f"Fehler: {e}")
-        # Alternativ: raise e, um den Fehler weiterzugeben
     except pd.errors.ParserError as e:
         print(f"Fehler beim Parsen der Datei: {e}")
     except Exception as e:
@@ -20,6 +21,7 @@ def load_data(file_path):
 
 def clean_data(data):
     try:
+        # Entfernen von leeren Werten in der 'Query'-Spalte
         data = data.dropna(subset=['Query'])
         return data
     except KeyError as e:

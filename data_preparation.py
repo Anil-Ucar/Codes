@@ -3,7 +3,6 @@ import pandas as pd
 import sqlite3
 from pathlib import Path
 
-# Funktion zum Laden der Daten aus einer Datei (alte Methode)
 def load_data(file_path):
     try:
         file_path = Path(file_path)

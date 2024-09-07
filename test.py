@@ -1,9 +1,9 @@
 import sqlite3
 
-#Dateiname anpassen für die AOL Request dinger
+#Dateiname anpassen für die AOL Request Daten
 input_filenames = ['user-ct-test-collection-01.txt', 'user-ct-test-collection-02.txt', 'user-ct-test-collection-03.txt', 'user-ct-test-collection-04.txt', 'user-ct-test-collection-05.txt', 'user-ct-test-collection-06.txt', 'user-ct-test-collection-07.txt', 'user-ct-test-collection-08.txt', 'user-ct-test-collection-09.txt', 'user-ct-test-collection-10.txt']
 
-#Verbindungsaufbau mmit Datenbank
+#Verbindungsaufbau mit Datenbank
 conn = sqlite3.connect('search_queries.db')
 #Erstellt den Cursor für die Datenbankoperation
 cursor = conn.cursor()
@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS search_queries (
 ''')
 
 #oeffnet die txt Datei
-#with open(input_filename, 'r', encoding='utf-8') as file:
 for file_name in input_filenames:
     file = open(file_name, 'r', encoding='utf-8')
     next(file)  # Überspringe die Headerzeile

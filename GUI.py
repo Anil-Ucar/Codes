@@ -1,8 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 import sqlite3
 import threading
+import csv
 
 # Verbindung zur SQLite-Datenbank herstellen
 def connect_db():
@@ -56,7 +57,7 @@ def perform_analysis():
         cursor.execute("SELECT COUNT(DISTINCT AnonID) FROM search_queries WHERE Query != '-'")
         unique_users = cursor.fetchone()[0]
 
-        # Die häufigsten Suchabfragen ohne "-"
+        # Die häufigsten Suchanfragen ohne "-"
         cursor.execute("SELECT Query, COUNT(*) as count FROM search_queries WHERE Query != '-' GROUP BY Query ORDER BY count DESC LIMIT 10")
         common_queries = cursor.fetchall()
 
@@ -110,6 +111,27 @@ def perform_search():
         conn.close()
         stop_loading()  # Ladebalken stoppen
 
+# Funktion zum Exportieren der Daten in eine CSV-Datei
+def export_to_csv():
+    file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
+    
+    if not file_path:
+        return  # Falls kein Pfad ausgewählt wird, abbrechen
+    
+    # Daten aus der Treeview abrufen
+    data = []
+    for row_id in treeview.get_children():
+        row = treeview.item(row_id)['values']
+        data.append(row)
+    
+    # Daten in die CSV-Datei schreiben
+    with open(file_path, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(['AnonID', 'Query', 'QueryTime'])  # Spaltennamen schreiben
+        writer.writerows(data)  # Daten schreiben
+    
+    messagebox.showinfo("Erfolg", "Daten wurden erfolgreich exportiert.")
+
 # Funktionen zum Starten und Stoppen des Ladebalkens
 def start_loading():
     progress_bar.start()
@@ -130,6 +152,9 @@ btn_last_queries.pack(pady=10)
 
 btn_analyze_stats = tk.Button(root, text="Statistiken analysieren", command=analyze_statistics)
 btn_analyze_stats.pack(pady=10)
+
+btn_export_csv = tk.Button(root, text="Daten als CSV exportieren", command=export_to_csv)
+btn_export_csv.pack(pady=10)
 
 # Sucheingabe und Suchoptionen
 search_frame = tk.Frame(root)
